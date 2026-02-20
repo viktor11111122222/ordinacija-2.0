@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dr. Anđela Marelj – Stomatološka Ordinacija</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    // ⚠️  Zameni ova tri stringa svojim podacima sa emailjs.com
+    const EMAILJS_PUBLIC_KEY  = '4FrHcttWWMAg0A32b';
+    const EMAILJS_SERVICE_ID  = 'service_6c7crip';
+    const EMAILJS_TEMPLATE_ID = 'template_301bchb';
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  </script>
+</head>
+<body>
+
+  <!-- ══════════════ NAVIGATION ══════════════ -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#hero" class="logo">
+        <span class="logo-icon">✦</span>
+        <span>Dr. Marelj</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#about">O Nama</a></li>
+        <li><a href="#services">Usluge</a></li>
+        <li><a href="#doctor">Doktorica</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact">Kontakt</a></li>
+      </ul>
+      <a href="#contact" class="nav-cta">Zakažite Pregled</a>
+      <button class="burger" id="burger" aria-label="Meni">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#about" class="mob-link">O Nama</a>
+      <a href="#services" class="mob-link">Usluge</a>
+      <a href="#doctor" class="mob-link">Doktorica</a>
+      <a href="#faq" class="mob-link">FAQ</a>
+      <a href="#contact" class="mob-link">Kontakt</a>
+      <a href="#contact" class="mob-link mob-cta">Zakažite Pregled</a>
+    </div>
+  </nav>
+
+  <!-- ══════════════ HERO / PARALLAX ══════════════ -->
+  <section id="hero">
+    <div class="parallax-bg" id="parallaxBg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Dobrodošli u stomatološku ordinaciju</p>
+      <h1>Vaš osmeh,<br /><em>naša strast.</em></h1>
+      <p class="hero-sub">Moderna stomatološka nega u toploj i opuštenoj atmosferi — gde svaka poseta počinje poverenjem, a završava lepim osmehom.</p>
+      <div class="hero-btns">
+        <a href="#contact" class="btn-primary">Zakažite Pregled</a>
+        <a href="#services" class="btn-ghost">Naše Usluge</a>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>Skrolujte</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════ STATS BAR ══════════════ -->
+  <section class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat">
+        <strong>15+</strong>
+        <span>Godina iskustva</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <strong id="statPatients">2 000</strong>
+        <span>Zadovoljnih pacijenata</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <strong id="statServices">5</strong>
+        <span>Stomatoloških usluga</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <strong id="statRating">5 ★</strong>
+        <span>Prosečna ocena</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ ABOUT ══════════════ -->
+  <section id="about" class="section">
+    <div class="container split">
+      <div class="split-img" data-reveal="left">
+        <div class="about-img-wrap">
+          <img
+            src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=700&q=80"
+            alt="Stomatološka ordinacija"
+          />
+          <div class="about-badge">
+            <span class="badge-num">15+</span>
+            <span class="badge-txt">godina<br/>prakse</span>
+          </div>
+        </div>
+      </div>
+      <div class="split-text" data-reveal="right">
+        <p class="section-label">O Ordinaciji</p>
+        <h2>Stomatologija sa<br/>ljudskim licem.</h2>
+        <p class="body-text">Ova ordinacija je nastala iz jedne proste ideje — da stomatološka ordinacija ne mora biti mesto straha. Ovde svaki pacijent biva dočekan sa toplinom, strpljenjem i punom pažnjom. Jer lep osmeh nije luksuz, to je samopouzdanje.</p>
+        <p class="body-text">Radim po principima savremene stomatologije, uz kontinuiranu edukaciju, praćenje novih tehnika i upotrebu kvalitetnih materijala koji traju. Moja motivacija je vidljiva u svakom osmehu pacijenta koji izađe iz ordinacije.</p>
+        <ul class="check-list">
+          <li>Individualni pristup i bezbolni tretmani</li>
+          <li>Brzo zakazivanje i minimalno čekanje</li>
+          <li>Moderna oprema i kvalitetni materijali</li>
+          <li>Posebna pažnja prema pacijentima koji se boje stomatologa</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ SERVICES ══════════════ -->
+  <section id="services" class="section section-alt">
+    <div class="container">
+      <div class="section-head" data-reveal="up">
+        <p class="section-label">Usluge</p>
+        <h2>Šta nudimo</h2>
+        <p class="section-sub">Pet oblasti stomatološke nege kojima pokrivamo sve što vam treba — od prevencije do estetike.</p>
+      </div>
+      <div class="cards-grid">
+        <div class="card" data-reveal="up" data-delay="0">
+          <div class="card-icon">🔬</div>
+          <h3>Konzervativna Stomatologija</h3>
+          <p>Lečenje karijesa, kompozitne plombe i restauracije koje izgledaju i funkcionišu kao prirodni zubi.</p>
+        </div>
+        <div class="card" data-reveal="up" data-delay="100">
+          <div class="card-icon">🦷</div>
+          <h3>Protetika</h3>
+          <p>Izrada krunica, mostova i proteza — trajno i estetsko rešenje za nedostajuće ili oštećene zube.</p>
+        </div>
+        <div class="card" data-reveal="up" data-delay="200">
+          <div class="card-icon">🩺</div>
+          <h3>Oralna Hirurgija</h3>
+          <p>Bezbolno vađenje zuba i hirurški zahvati uz primenu moderne anestezije i maksimalnu brigu o pacijentu.</p>
+        </div>
+        <div class="card" data-reveal="up" data-delay="300">
+          <div class="card-icon">✨</div>
+          <h3>Ultrazvučno Skidanje Kamenca</h3>
+          <p>Profesionalno uklanjanje kamenca i naslaga ultrazvučnim uređajem, uz poliranje i savete za higijenu.</p>
+        </div>
+        <div class="card" data-reveal="up" data-delay="400">
+          <div class="card-icon">🌟</div>
+          <h3>Izbeljivanje Zuba</h3>
+          <p>Profesionalno izbeljivanje u ordinaciji za vidljivo svetliji i lepši osmeh već nakon jedne posete.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ DOCTOR ══════════════ -->
+  <section id="doctor" class="section">
+    <div class="container split doctor-split">
+      <div class="split-img" data-reveal="left">
+        <div class="about-img-wrap">
+          <img
+            src="/public/andjela12.jpg"
+            alt="Dr. Anđela Marelj"
+          />
+          <div class="about-badge">
+            <span class="badge-num">Dr.</span>
+            <span class="badge-txt">Anđela<br/>Marelj</span>
+          </div>
+        </div>
+      </div>
+      <div class="split-text" data-reveal="right">
+        <p class="section-label">Doktorica</p>
+        <h2>Poznajte osobu<br/>iza osmeha.</h2>
+        <p class="body-text">Ja sam dr. Anđela Marelj, doktorica stomatologije i osnivačica ove ordinacije. Stomatologiju sam odabrala jer verujem da osmeh nije samo estetika — to je samopouzdanje, zdravlje i kvalitet života.</p>
+        <p class="body-text">Svaki pacijent nosi svoju priču i svoj strah. Moj posao nije samo lečiti zube — to je stvarati okruženje u kojem se pacijent oseća sigurno, shvaćeno i zbrinuto. Detaljnost, strpljenje i empatija su principi kojih se nikad ne odričem.</p>
+        <p class="body-text">Kontinuirano se edukujem, pratim trendove moderne stomatologije i ulažem u opremu i materijale jer vaš osmeh zaslužuje samo najbolje.</p>
+        <ul class="check-list">
+          <li>Doktorica stomatologije, 15+ godina prakse</li>
+          <li>Kontinuirana edukacija i usavršavanje</li>
+          <li>Poseban fokus na estetsku stomatologiju</li>
+          <li>Pacijenti koji se boje stomatologa — dobrodošli!</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ FAQ ══════════════ -->
+  <section id="faq" class="section section-alt">
+    <div class="container">
+      <div class="section-head" data-reveal="up">
+        <p class="section-label">FAQ</p>
+        <h2>Česta pitanja</h2>
+        <p class="section-sub">Odgovori na pitanja koja pacijenti najčešće postavljaju pre prve posete.</p>
+      </div>
+      <div class="faq-list" data-reveal="up" data-delay="100">
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Da li su stomatološki zahvati bolni?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Uz modernu lokalnu anesteziju većina zahvata je potpuno bezbolna. Posebno vodim računa o pacijentima koji imaju strah od stomatologa — uvek radimo tempom koji vama odgovara i nema žurbe.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Koliko često treba ići na pregled?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Preporučuje se kontrolni pregled i profesionalno čišćenje svakih 6 meseci. Redovni pregledi omogućavaju rano otkrivanje problema i sprečavaju skuplje intervencije u budućnosti.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Koliko traje ultrazvučno skidanje kamenca?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Ceo postupak obično traje između 30 i 60 minuta, zavisno od količine naslaga. Uključuje uklanjanje kamenca, poliranje zuba i savete za pravilno održavanje oralne higijene kod kuće.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Da li je izbeljivanje zuba sigurno?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Da, profesionalno izbeljivanje koje se izvodi u ordinaciji je potpuno sigurno uz stručni nadzor. Koriste se provereni preparati u kontrolisanim dozama. Zubi mogu biti privremeno osetljivi, što prolazi nakon par dana.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Kako se zakazuje pregled?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Pregled možete zakazati telefonom, putem emaila ili popunjavanjem forme na ovoj stranici. Trudimo se da odgovorimo u roku od jednog radnog dana i nađemo termin koji vama odgovara.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Šta je konzervativna stomatologija?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Konzervativna stomatologija obuhvata lečenje karijesa i postavljanje plombi uz maksimalno očuvanje zdrave zubne supstance. Koristimo kompozitne materijale boje zuba tako da plombe nisu vidljive i izgledaju potpuno prirodno.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Koliko traje izrada krunice ili mosta?</span>
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <p>Protetski radovi obično zahtevaju dve do tri posete u roku od jedne do dve nedelje. Na prvom pregledu uzimamo otiske, izrađujemo privremeno rešenje, a zatim postavljamo definitivni rad koji se uklapa u vaš zagriz i estetiku.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ RATING ══════════════ -->
+  <section id="rating" class="section">
+    <div class="container">
+      <div class="rating-card" data-reveal="up">
+        <div class="rating-left">
+          <div class="rating-big-score" id="ratingBigScore">5.0</div>
+          <div class="rating-stars-display" id="ratingStarsDisplay">★★★★★</div>
+          <p class="rating-count" id="ratingCount">Bazirana na <strong>128</strong> ocena</p>
+        </div>
+        <div class="rating-divider"></div>
+        <div class="rating-right">
+          <h3>Ocenite nas</h3>
+          <p class="rating-subtitle">Vaše mišljenje nam mnogo znači. Kako biste ocenili našu ordinaciju?</p>
+          <div class="rating-interactive" id="ratingInteractive">
+            <div class="rating-stars" id="ratingStars">
+              <button class="star-btn" data-value="1" aria-label="1 zvezdica">★</button>
+              <button class="star-btn" data-value="2" aria-label="2 zvezdice">★</button>
+              <button class="star-btn" data-value="3" aria-label="3 zvezdice">★</button>
+              <button class="star-btn" data-value="4" aria-label="4 zvezdice">★</button>
+              <button class="star-btn" data-value="5" aria-label="5 zvezdica">★</button>
+            </div>
+            <span class="rating-label" id="ratingLabel">Izaberite ocenu</span>
+          </div>
+          <button class="btn-primary btn-rate" id="submitRating" disabled>Pošaljite ocenu →</button>
+          <div class="rating-success" id="ratingSuccess">
+            <span class="rating-success-icon">✓</span>
+            <span>Hvala na oceni!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ CONTACT ══════════════ -->
+  <section id="contact" class="section section-alt">
+    <div class="container split contact-split">
+      <div class="split-text contact-info" data-reveal="left">
+        <p class="section-label">Kontakt</p>
+        <h2>Zakažite pregled</h2>
+        <p class="body-text">Pozovite nas, pošaljite poruku ili popunite formu — odgovaramo u roku od 24 sata.</p>
+        <div class="info-items">
+          <div class="info-item">
+            <span class="info-icon">📍</span>
+            <div>
+              <strong>Adresa</strong>
+              <span>Orlovića Pavla 16, Niš</span>
+            </div>
+          </div>
+          <button class="btn-map" id="openMap" aria-label="Prikaži na mapi">
+            <span class="btn-map-icon">🗺️</span>
+            Pogledajte na mapi
+          </button>
+          <div class="info-item">
+            <span class="info-icon">📞</span>
+            <div>
+              <strong>Telefon</strong>
+              <span>018 25  8449</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">✉️</span>
+            <div>
+              <strong>Email</strong>
+              <span>andjela_marelj@hotmail.com</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">🕐</span>
+            <div>
+              <strong>Radno Vreme</strong>
+              <span>Pon – Pet: 8:00 – 18:00<br/>Sub: 8:00 – 13:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form-wrap" data-reveal="right">
+        <form class="contact-form" id="contactForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Ime i prezime</label>
+              <input type="text" id="name" name="from_name" placeholder="Vaše ime" required />
+            </div>
+            <div class="form-group">
+              <label for="phone">Telefon</label>
+              <input type="tel" id="phone" name="phone" placeholder="+381 6x xxx xx xx" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="email">Email adresa</label>
+            <input type="email" id="email" name="from_email" placeholder="vaš@email.com" required />
+          </div>
+          <div class="form-group">
+            <label for="service">Vrsta pregleda</label>
+            <div class="select-wrap">
+              <div class="select-face" aria-hidden="true">
+                <span class="select-face-text" id="serviceText">Izaberite uslugu…</span>
+                <span class="select-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="#6b7a8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </div>
+              <select id="service" name="service">
+                <option value="">Izaberite uslugu…</option>
+                <option>Konzervativna stomatologija</option>
+                <option>Protetika</option>
+                <option>Oralna hirurgija</option>
+                <option>Ultrazvučno skidanje kamenca</option>
+                <option>Izbeljivanje zuba</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="message">Poruka (opcionalno)</label>
+            <textarea id="message" name="message" rows="4" placeholder="Kratki opis tegoba ili pitanja…"></textarea>
+          </div>
+          <button type="submit" class="btn-primary btn-full">Pošaljite Zahtev →</button>
+          <p class="form-note">Kontaktiraćemo vas u roku od jednog radnog dana.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-icon">✦</span>
+        <span>Dr. Marelj</span>
+      </div>
+      <p class="footer-copy">© 2026 Stomatološka Ordinacija Dr. Marelj · Sva prava zadržana</p>
+      <p class="footer-copy" style="margin-top:4px;font-size:0.75rem;opacity:.5;">Orlovića Pavla 16, Srbija · 018 25  8449</p>
+    </div>
+  </footer>
+
+  <!-- ══════════════ MAP MODAL ══════════════ -->
+  <div class="map-modal" id="mapModal" role="dialog" aria-modal="true" aria-label="Lokacija ordinacije">
+    <div class="map-modal-inner">
+      <div class="map-modal-header">
+        <div class="map-modal-title">
+          <span>📍</span>
+          <div>
+            <strong>Stomatološka Ordinacija Dr. Marelj</strong>
+            <span>Orlovića Pavla 16, Niš, Srbija</span>
+          </div>
+        </div>
+        <button class="map-close" id="closeMap" aria-label="Zatvori">&times;</button>
+      </div>
+      <div class="map-frame-wrap">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2952.0!2d21.8965!3d43.3200!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4755b0e9ba4bad11%3A0x0!2sOrlovica+Pavla+16%2C+Ni%C5%A1!5e0!3m2!1ssr!2srs!4v1708000000000"
+          width="100%"
+          height="100%"
+          style="border:0;"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Lokacija ordinacije"
+        ></iframe>
+      </div>
+      <div class="map-modal-footer">
+        <a
+          href="https://www.google.com/maps/dir/?api=1&destination=Orlovica+Pavla+16,+Ni%C5%A1,+Srbija"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-primary"
+        >
+          Otvori u Google Maps →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
