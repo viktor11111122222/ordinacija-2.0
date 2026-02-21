@@ -1,6 +1,281 @@
 /* ── script.js ── */
 
 /* ══════════════════════════════════════════
+   PULL-TO-REFRESH (overscroll gore → reload)
+══════════════════════════════════════════ */
+(function () {
+  const THRESHOLD = 500;
+  let indicator   = null;
+  let refreshing  = false;
+
+  function createIndicator() {
+    const el = document.createElement('div');
+    el.id = 'ptr-indicator';
+    el.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg><span>Pusti za osvežavanje</span>`;
+    Object.assign(el.style, {
+      position:      'fixed',
+      top:           '0',
+      left:          '50%',
+      transform:     'translateX(-50%) translateY(-100%)',
+      background:    'var(--teal)',
+      color:         '#fff',
+      padding:       '10px 22px',
+      borderRadius:  '0 0 16px 16px',
+      display:       'flex',
+      alignItems:    'center',
+      gap:           '10px',
+      fontSize:      '0.85rem',
+      fontWeight:    '500',
+      fontFamily:    "'Inter', sans-serif",
+      zIndex:        '9999',
+      boxShadow:     '0 6px 24px rgba(42,157,143,.35)',
+      transition:    'transform .3s cubic-bezier(.4,0,.2,1)',
+      pointerEvents: 'none',
+    });
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function setProgress(ratio) {
+    if (!indicator) indicator = createIndicator();
+    const clamped = Math.min(ratio, 1);
+    const y = clamped >= 1 ? 0 : -100 + clamped * 80;
+    indicator.style.transform = `translateX(-50%) translateY(${y}%)`;
+    indicator.querySelector('svg').style.transform = `rotate(${clamped * 360}deg)`;
+  }
+
+  function hideIndicator() {
+    if (indicator) indicator.style.transform = 'translateX(-50%) translateY(-100%)';
+  }
+
+  function triggerReload() {
+    if (!indicator) indicator = createIndicator();
+    indicator.style.transform = 'translateX(-50%) translateY(0%)';
+    indicator.querySelector('span').textContent = 'Osvežavanje…';
+    const style = document.createElement('style');
+    style.textContent = '@keyframes ptr-spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+    indicator.querySelector('svg').style.animation = 'ptr-spin .7s linear infinite';
+    setTimeout(() => location.reload(), 600);
+  }
+
+  /* ── Touch (mobile) ── */
+  let touchStart = null;
+  window.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) touchStart = e.touches[0].clientY;
+  }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (touchStart === null || refreshing) return;
+    if (document.getElementById('calcModal')?.classList.contains('open')) return;
+    const delta = e.touches[0].clientY - touchStart;
+    if (delta > 0 && window.scrollY === 0) setProgress(delta / THRESHOLD);
+  }, { passive: true });
+  window.addEventListener('touchend', () => {
+    if (touchStart === null || refreshing) return;
+    const el = document.getElementById('ptr-indicator');
+    const match = el?.style.transform.match(/translateY\((.+)%\)/);
+    const y = match ? parseFloat(match[1]) : -100;
+    if (y >= -25) { refreshing = true; triggerReload(); }
+    else hideIndicator();
+    touchStart = null;
+  });
+
+  /* ── Mouse wheel (desktop Mac trackpad overscroll) ── */
+  let wheelPull  = 0;
+  let wheelTimer = null;
+  // Ako stranica starta na vrhu, odmah oznaci kao "na vrhu"
+  let atTopSince = window.scrollY === 0 ? Date.now() : null;
+
+  // Beleži kada se scroll zaustavi na vrhu
+  window.addEventListener('scroll', () => {
+    if (window.scrollY === 0) {
+      if (atTopSince === null) atTopSince = Date.now();
+    } else {
+      atTopSince = null;
+      wheelPull  = 0;
+      hideIndicator();
+    }
+  }, { passive: true });
+
+  window.addEventListener('wheel', e => {
+    if (refreshing) return;
+    if (document.getElementById('calcModal')?.classList.contains('open')) return;
+
+    // Dozvoli pull samo ako je korisnik bio miran na vrhu bar 400ms
+    const readyToRefresh = window.scrollY === 0
+      && atTopSince !== null
+      && (Date.now() - atTopSince) > 400;
+
+    if (readyToRefresh && e.deltaY < 0) {
+      wheelPull += Math.abs(e.deltaY);
+      setProgress(wheelPull / THRESHOLD);
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => {
+        if (wheelPull >= THRESHOLD) { refreshing = true; triggerReload(); }
+        else { wheelPull = 0; hideIndicator(); }
+      }, 200);
+    } else if (window.scrollY > 0) {
+      wheelPull = 0;
+    }
+  }, { passive: true });
+})();
+
+/* ══════════════════════════════════════════
+   PRICE CALCULATOR
+══════════════════════════════════════════ */
+(function () {
+
+  /* ── Sinhronizacija: čita cene iz kartica i puni kalkulator ── */
+  document.querySelectorAll('#services .cpl-row').forEach(row => {
+    const spans = row.querySelectorAll(':scope > span');
+    if (spans.length < 2) return;
+    const name      = spans[0].textContent.trim();
+    const priceText = spans[1].textContent.trim();            // npr. "3.000 RSD"
+    const price     = parseInt(priceText.replace(/\./g, '').replace(/\s*RSD/i, ''), 10);
+    if (isNaN(price)) return;
+
+    document.querySelectorAll('.calc-item').forEach(item => {
+      const nameEl = item.querySelector('.calc-item-name');
+      if (nameEl && nameEl.textContent.trim() === name) {
+        item.dataset.price = price;
+        const dispEl = item.querySelector('.calc-item-price');
+        if (dispEl) dispEl.textContent = priceText;
+      }
+    });
+  });
+
+  const overlay  = document.getElementById('calcModal');
+  const openBtn  = document.getElementById('openCalc');
+  const closeBtn = document.getElementById('closeCalc');
+  const resetBtn = document.getElementById('calcReset');
+  const totalEl  = document.getElementById('calcTotal');
+  const ctaBtn   = document.getElementById('calcCta');
+
+  if (!overlay) return;
+
+  // Format broj sa tačkama: 25000 → "25.000"
+  function fmt(n) {
+    return n.toLocaleString('sr-RS');
+  }
+
+  function calcTotal() {
+    let sum = 0;
+    overlay.querySelectorAll('.calc-item').forEach(item => {
+      const qty   = parseInt(item.querySelector('.qty-val').textContent, 10);
+      const price = parseInt(item.dataset.price, 10);
+      sum += qty * price;
+    });
+    return sum;
+  }
+
+  function updateTotal() {
+    const sum = calcTotal();
+    totalEl.textContent = fmt(sum) + ' RSD';
+    // Bump animacija
+    totalEl.classList.remove('bump');
+    void totalEl.offsetWidth;
+    totalEl.classList.add('bump');
+    setTimeout(() => totalEl.classList.remove('bump'), 220);
+  }
+
+  // Qty steppers
+  overlay.addEventListener('click', e => {
+    const plus  = e.target.closest('.qty-plus');
+    const minus = e.target.closest('.qty-minus');
+    if (!plus && !minus) return;
+
+    const item  = e.target.closest('.calc-item');
+    const valEl = item.querySelector('.qty-val');
+    let val = parseInt(valEl.textContent, 10);
+
+    if (plus)  val = Math.min(val + 1, 20);
+    if (minus) val = Math.max(val - 1, 0);
+
+    valEl.textContent = val;
+    item.classList.toggle('has-qty', val > 0);
+    updateTotal();
+  });
+
+  // Reset
+  resetBtn.addEventListener('click', () => {
+    overlay.querySelectorAll('.qty-val').forEach(el => el.textContent = '0');
+    overlay.querySelectorAll('.calc-item').forEach(el => el.classList.remove('has-qty'));
+    totalEl.textContent = '0 RSD';
+  });
+
+  // Open / close
+  function openModal() {
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+
+  // Navigacija po kategorijama
+  const calcBody = overlay.querySelector('.calc-body');
+  const navBtns  = overlay.querySelectorAll('.calc-nav-btn');
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      calcBody.scrollTo({ top: target.offsetTop - calcBody.offsetTop - 8, behavior: 'smooth' });
+    });
+  });
+
+  // Aktivni tab prati scroll
+  const categories = overlay.querySelectorAll('.calc-category');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navBtns.forEach(b => b.classList.toggle('active', b.dataset.target === id));
+        // Skroluj nav tab u vidljivo polje
+        const activeBtn = overlay.querySelector(`.calc-nav-btn[data-target="${id}"]`);
+        if (activeBtn) activeBtn.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }, { root: calcBody, threshold: 0.35 });
+
+  categories.forEach(cat => io.observe(cat));
+
+  // Zatvori klik na CTA link
+  ctaBtn.addEventListener('click', closeModal);
+
+  // Klik van modala
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal();
+  });
+
+  // ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+  });
+})();
+
+/* ══════════════════════════════════════════
+   BACK TO TOP
+══════════════════════════════════════════ */
+(function () {
+  const btn = document.getElementById('backToTop');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+/* ══════════════════════════════════════════
    PARALLAX EFFECT
 ══════════════════════════════════════════ */
 const parallaxBg = document.getElementById('parallaxBg');
@@ -70,7 +345,12 @@ const revealObserver = new IntersectionObserver(
       if (!entry.isIntersecting) return;
       const el    = entry.target;
       const delay = parseInt(el.dataset.delay || '0', 10);
-      setTimeout(() => el.classList.add('visible'), delay);
+      setTimeout(() => {
+        el.classList.add('visible');
+        // Nakon što animacija završi, ukloni data-reveal da se vrate
+        // originalni hover transitions elementa (npr. .card, .faq-item)
+        setTimeout(() => el.removeAttribute('data-reveal'), 800);
+      }, delay);
       revealObserver.unobserve(el);
     });
   },
@@ -359,4 +639,17 @@ form.addEventListener('submit', e => {
       btn.disabled         = false;
     }, 3000);
   }, 1500);
+});
+
+/* ══════════════════════════════════════════
+   USLUGE — inline price toggle
+══════════════════════════════════════════ */
+document.querySelectorAll('.card-price-toggle').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const card = btn.closest('.card');
+    const isOpen = card.classList.contains('prices-open');
+    card.classList.toggle('prices-open', !isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+  });
 });
