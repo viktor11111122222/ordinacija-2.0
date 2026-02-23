@@ -21,7 +21,21 @@
   --trans:       .38s cubic-bezier(.4,0,.2,1);
 }
 
-html { scroll-behavior: smooth; font-size: 16px; background: var(--navy); }
+/* ══════════════════════════════════════════
+   DARK MODE VARIJABLE
+══════════════════════════════════════════ */
+html.dark {
+  --white:   #1a2535;
+  --off:     #141d2b;
+  --txt:     #dde6f5;
+  --muted:   #8fa8c0;
+  --border:  #2a3a4e;
+  --shadow:      0 10px 40px rgba(0,0,0,.35);
+  --shadow-lg:   0 24px 72px rgba(0,0,0,.45);
+  --teal-lt: #0d2a27;
+}
+
+html { scroll-behavior: smooth; font-size: 16px; background: var(--navy); overflow-x: hidden; }
 
 body {
   font-family: 'Inter', sans-serif;
@@ -154,6 +168,166 @@ ul { list-style: none; }
   background: #21867a;
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(42,157,143,.35);
+}
+
+.dark-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.25);
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+  transition: border-color var(--trans), background var(--trans), color var(--trans);
+  flex-shrink: 0;
+}
+
+.dark-toggle:hover {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.5);
+}
+
+#navbar.scrolled .dark-toggle {
+  border-color: var(--border);
+  color: var(--navy);
+}
+
+#navbar.scrolled .dark-toggle:hover {
+  background: var(--teal-lt);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+/* Prikaži pravo dugme zavisno od teme */
+html:not(.dark) .dark-toggle .icon-moon { display: block; }
+html:not(.dark) .dark-toggle .icon-sun  { display: none;  }
+html.dark       .dark-toggle .icon-sun  { display: block; }
+html.dark       .dark-toggle .icon-moon { display: none;  }
+
+/* Dark mode — specifični overrides */
+html.dark body { background: var(--off); }
+
+html.dark #hero {
+  background: linear-gradient(135deg, #0a1520 0%, #0f2030 60%, #0d2a27 100%);
+}
+
+html.dark .stats-bar {
+  background: #0a1520;
+}
+
+html.dark .card {
+  background: var(--white);
+  border-color: var(--border);
+}
+
+html.dark .contact-form-wrap {
+  background: var(--white);
+  border-color: var(--border);
+}
+
+html.dark .form-group input,
+html.dark .form-group textarea,
+html.dark .select-face,
+html.dark .rating-comment {
+  background: var(--off);
+  border-color: var(--border);
+  color: var(--txt);
+}
+
+html.dark .faq-item {
+  background: var(--white);
+  border-color: var(--border);
+}
+
+/* ── Navbar scrolled u dark modu ── */
+html.dark #navbar.scrolled {
+  background: rgba(20,29,43,.96);
+}
+html.dark #navbar.scrolled .logo,
+html.dark #navbar.scrolled .nav-links a { color: var(--txt); }
+html.dark #navbar.scrolled .nav-links a:hover { color: var(--teal); }
+html.dark #navbar.scrolled .burger span { background: var(--txt); }
+html.dark #navbar.scrolled .dark-toggle { color: var(--txt); border-color: var(--border); }
+
+/* ── Stats bar — uvijek tamna pozadina, tekst mora biti bijelio ── */
+html.dark .stat strong { color: #e8f0fb; }
+
+/* ── Elementi koji koriste color: var(--navy) — nevidljivi na tamnoj pozadini ── */
+html.dark .faq-question,
+html.dark .info-item strong,
+html.dark .form-group label,
+html.dark .rating-big-score,
+html.dark .rating-count strong,
+html.dark .rating-right h3,
+html.dark .calc-total-val,
+html.dark .select-face-text { color: var(--txt); }
+
+/* ── Rating card ── */
+html.dark .rating-card {
+  background: var(--white);
+  border-color: var(--border);
+}
+html.dark .rating-divider { background: var(--border); }
+
+/* ── Kalkulator modal ── */
+html.dark .calc-modal { background: var(--white); }
+html.dark .calc-header,
+html.dark .calc-footer { border-color: var(--border); background: var(--white); }
+html.dark .calc-item { border-color: var(--border); }
+html.dark .calc-nav-btn { color: var(--muted); }
+html.dark .calc-nav-btn.active { color: #fff; }
+html.dark .calc-item-price { color: var(--muted); }
+
+/* ── Mobile menu ── */
+html.dark .mobile-menu { background: rgba(20,29,43,.97); border-color: var(--border); }
+html.dark .mob-link { color: var(--txt); }
+
+/* ── Hero tekst — var(--white) postaje taman u dark modu ── */
+html.dark .hero-content { color: #e8f0fb; }
+html.dark .hero-content h1 { color: #e8f0fb; }
+
+/* ── Parallax overlay — tamniji u dark modu za bolji kontrast teksta ── */
+html.dark .hero-overlay {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,.70) 0%,
+      rgba(0,0,0,.50) 45%,
+      rgba(0,0,0,.80) 100%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(10,21,32,.65) 0%,
+      rgba(42,157,143,.20) 100%
+    );
+}
+
+/* ── Navbar transparent (nije scrolled) u dark modu — elementi postaju tamni ── */
+html.dark #navbar:not(.scrolled) .logo { color: rgba(255,255,255,.92); }
+html.dark #navbar:not(.scrolled) .burger span { background: rgba(255,255,255,.88); }
+html.dark #navbar:not(.scrolled) .dark-toggle {
+  color: rgba(255,255,255,.88);
+  border-color: rgba(255,255,255,.35);
+}
+
+/* ── About slika — mix-blend-mode: multiply + tamna pozadina = crna slika ── */
+html.dark .about-img-wrap img { mix-blend-mode: normal; }
+
+/* ── Social ikone — color: var(--navy) nevidljiv ── */
+html.dark .social-icon { color: var(--txt); }
+
+/* ── Footer logo — color: var(--white) postaje taman na tamnom footeru ── */
+html.dark .footer-logo { color: rgba(255,255,255,.9); }
+
+/* ── Back to top — color: var(--navy) nevidljiv ── */
+html.dark .back-to-top { color: var(--txt); }
+
+html.dark .copy-btn {
+  background: var(--off);
+  border-color: var(--border);
 }
 
 .burger {
@@ -328,7 +502,7 @@ ul { list-style: none; }
 .btn-ghost {
   display: inline-block;
   padding: 14px 32px;
-  color: var(--white);
+  /* color: var(--white); */
   border: 2px solid rgba(255,255,255,.5);
   border-radius: 50px;
   font-weight: 500;
@@ -340,7 +514,7 @@ ul { list-style: none; }
 }
 
 .btn-ghost:hover {
-  border-color: var(--white);
+  border-color: white;
   background: rgba(255,255,255,.12);
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(0,0,0,.18);
@@ -846,6 +1020,39 @@ ul { list-style: none; }
   line-height: 1.6;
 }
 
+.phone-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--muted);
+  font-size: .75rem;
+  cursor: pointer;
+  transition: color var(--trans), border-color var(--trans), background var(--trans);
+  flex-shrink: 0;
+}
+
+.copy-btn:hover {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--teal-lt);
+}
+
+.copy-btn.copied {
+  color: #16a34a;
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
 /* Contact form */
 .contact-form-wrap {
   background: var(--white);
@@ -865,6 +1072,9 @@ ul { list-style: none; }
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+
+.form-row { margin-bottom: 16px; }
+.form-row .form-group { margin-bottom: 0; }
 
 .form-group {
   display: flex;
@@ -1757,6 +1967,31 @@ ul { list-style: none; }
   font-weight: 600;
 }
 
+.rating-comment {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: .88rem;
+  color: var(--txt);
+  background: var(--white);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--trans), box-shadow var(--trans);
+  min-height: 72px;
+}
+
+.rating-comment:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(42,157,143,.12);
+}
+
+.rating-comment:disabled {
+  opacity: .5;
+  pointer-events: none;
+}
+
 .btn-rate {
   align-self: flex-start;
   margin-top: 4px;
@@ -1867,6 +2102,72 @@ footer {
   text-align: center;
 }
 
+/* Radno vreme */
+.footer-hours {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 16px;
+}
+
+.hours-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .85rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--white);
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teal);
+  flex-shrink: 0;
+}
+
+.hours-status.open  .status-dot { background: #4ade80; animation: pulse-open  2s ease-in-out infinite; }
+.hours-status.closed .status-dot { background: #f87171; animation: none; }
+.hours-status.open  #statusText  { color: #4ade80; }
+.hours-status.closed #statusText { color: #f87171; }
+
+@keyframes pulse-open {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+}
+
+.hours-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.hours-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: .8rem;
+  color: rgba(255,255,255,.4);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  transition: color .2s;
+}
+
+.hours-row:last-child { border-bottom: none; }
+
+.hours-row.today {
+  color: rgba(255,255,255,.9);
+  font-weight: 600;
+}
+
+.hours-day  { flex-shrink: 0; }
+.hours-time { text-align: right; }
+
 .footer-social {
   display: flex;
   gap: 10px;
@@ -1942,11 +2243,19 @@ footer {
 [data-reveal="left"]  { transform: translateX(-44px); }
 [data-reveal="right"] { transform: translateX(44px); }
 
+/* Kartice usluga — scale efekt za dramatičniji ulazak */
+.card[data-reveal="up"] { transform: translateY(48px) scale(0.95); }
+
 [data-reveal].visible {
   opacity: 1;
   transform: none;
   transition: opacity .75s cubic-bezier(.22,1,.36,1),
               transform .75s cubic-bezier(.22,1,.36,1);
+}
+
+.card[data-reveal].visible {
+  transition: opacity .8s cubic-bezier(.22,1,.36,1),
+              transform .8s cubic-bezier(.22,1,.36,1);
 }
 
 /* ══════════════════════════════════════════
@@ -2067,6 +2376,7 @@ footer {
 
   /* Contact */
   .form-row        { grid-template-columns: 1fr; }
+  .contact-split   { gap: 32px; }
   .contact-form-wrap { padding: 24px 20px; }
   .info-items      { gap: 18px; }
   .social-icons    { flex-wrap: wrap; }
@@ -2130,6 +2440,7 @@ footer {
   .faq-item.open .faq-answer > p { padding: 4px 16px 16px; }
 
   /* Contact */
+  .contact-split   { gap: 24px; }
   .contact-form-wrap { padding: 20px 16px; }
 
   /* Social */

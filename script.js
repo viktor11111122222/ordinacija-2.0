@@ -168,14 +168,31 @@
     return sum;
   }
 
+  let _displayed = 0;
+  let _animId    = null;
+
+  function easeOutTotal(t) { return 1 - Math.pow(1 - t, 3); }
+
   function updateTotal() {
-    const sum = calcTotal();
-    totalEl.textContent = fmt(sum) + ' RSD';
-    // Bump animacija
-    totalEl.classList.remove('bump');
-    void totalEl.offsetWidth;
-    totalEl.classList.add('bump');
-    setTimeout(() => totalEl.classList.remove('bump'), 220);
+    const target = calcTotal();
+    const from   = _displayed;
+    if (_animId) cancelAnimationFrame(_animId);
+
+    const dur   = 420;
+    const start = performance.now();
+
+    (function tick(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const v = from + (target - from) * easeOutTotal(p);
+      _displayed = v;
+      totalEl.textContent = fmt(Math.round(v)) + ' RSD';
+      if (p < 1) {
+        _animId = requestAnimationFrame(tick);
+      } else {
+        _displayed = target;
+        _animId    = null;
+      }
+    })(start);
   }
 
   // Qty steppers
@@ -200,7 +217,7 @@
   resetBtn.addEventListener('click', () => {
     overlay.querySelectorAll('.qty-val').forEach(el => el.textContent = '0');
     overlay.querySelectorAll('.calc-item').forEach(el => el.classList.remove('has-qty'));
-    totalEl.textContent = '0 RSD';
+    updateTotal();
   });
 
   // Open / close
@@ -454,6 +471,31 @@ function refreshPatientsDisplay() {
 refreshPatientsDisplay();
 
 /* ══════════════════════════════════════════
+   SERVICES COUNTER (global utility)
+══════════════════════════════════════════ */
+const SERVICES_KEY  = 'ordinacija_services';
+const SERVICES_BASE = 5;
+
+function getServiceCount() {
+  return parseInt(localStorage.getItem(SERVICES_KEY) || '0', 10);
+}
+
+function incrementServices() {
+  const newCount = getServiceCount() + 1;
+  localStorage.setItem(SERVICES_KEY, String(newCount));
+  refreshServicesDisplay();
+}
+
+function refreshServicesDisplay() {
+  const el = document.getElementById('statServices');
+  if (el) el.textContent = SERVICES_BASE + getServiceCount();
+}
+
+// Show correct count on page load
+refreshServicesDisplay();
+
+
+/* ══════════════════════════════════════════
    STAR RATING SYSTEM
 ══════════════════════════════════════════ */
 (function () {
@@ -517,11 +559,14 @@ refreshPatientsDisplay();
   // Init display
   updateDisplay(getRatings());
 
+  const commentEl = document.getElementById('ratingComment');
+
   if (alreadyRated) {
     if (interactiveEl) interactiveEl.classList.add('disabled');
-    if (submitBtn) submitBtn.style.display = 'none';
-    if (successEl) successEl.classList.add('show');
-    if (labelEl)   labelEl.textContent = 'Već ste glasali. Hvala!';
+    if (commentEl)     commentEl.disabled = true;
+    if (submitBtn)     submitBtn.style.display = 'none';
+    if (successEl)     successEl.classList.add('show');
+    if (labelEl)       labelEl.textContent = 'Već ste glasali. Hvala!';
   }
 
   // Hover effects
@@ -570,9 +615,19 @@ refreshPatientsDisplay();
       const data = saveRating(selectedValue);
       localStorage.setItem('ordinacija_user_rated', 'true');
       updateDisplay(data);
-      incrementPatients();
+      if (selectedValue >= 2) incrementPatients();
+
+      // Send rating + comment via EmailJS
+      const comment = (commentEl && commentEl.value.trim()) || 'Bez komentara';
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_RATING_TEMPLATE_ID, {
+        rating       : selectedValue + '/5',
+        rating_label : labels[selectedValue],
+        comment      : comment,
+      }).then(() => console.log('Rating email poslat OK'))
+        .catch(err => console.error('Rating email greška:', err));
 
       if (interactiveEl) interactiveEl.classList.add('disabled');
+      if (commentEl)     commentEl.disabled = true;
       submitBtn.style.display = 'none';
       if (successEl) successEl.classList.add('show');
     });
@@ -653,3 +708,148 @@ document.querySelectorAll('.card-price-toggle').forEach(btn => {
     btn.setAttribute('aria-expanded', String(!isOpen));
   });
 });
+
+/* ══════════════════════════════════════════
+   STATS BAR — ANIMATED COUNTERS
+   (mora biti zadnji blok — svi display refresh-i
+    su već pokrenuti, pa čitamo tačne ciljne vrijednosti
+    i odmah resetujemo DOM na 0 prije prvog painta)
+══════════════════════════════════════════ */
+(function () {
+  const elYears    = document.getElementById('statYears');
+  const elPatients = document.getElementById('statPatients');
+  const elServices = document.getElementById('statServices');
+  const elRating   = document.getElementById('statRating');
+  const statsBar   = document.querySelector('.stats-bar');
+  if (!statsBar) return;
+
+  // Pročitaj tačne ciljne vrijednosti dok su još u DOM-u
+  const targets = {
+    years    : 15,
+    patients : PATIENTS_BASE + getPatientCount(),
+    services : SERVICES_BASE + getServiceCount(),
+    rating   : parseFloat(elRating && elRating.textContent) || 5.0,
+  };
+
+  // Odmah resetuj na 0 — browser još nije paintao, pa korisnik neće vidjeti pravi broj
+  if (elYears)    elYears.textContent    = '0+';
+  if (elPatients) elPatients.textContent = '0+';
+  if (elServices) elServices.textContent = '0';
+  if (elRating)   elRating.textContent   = '0.0 \u2605';
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function animateCounter(el, target, duration, formatter) {
+    const start = performance.now();
+    (function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      el.textContent = formatter(easeOut(progress) * target);
+      if (progress < 1) requestAnimationFrame(tick);
+    })(start);
+  }
+
+  let animated = false;
+  const observer = new IntersectionObserver(entries => {
+    if (!entries[0].isIntersecting || animated) return;
+    animated = true;
+    observer.disconnect();
+
+    const dur = 1800;
+
+    if (elYears)    animateCounter(elYears, targets.years, dur,
+      (v) => Math.round(v) + '+');
+
+    if (elPatients) animateCounter(elPatients, targets.patients, dur, (v) => {
+      const n = Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+      return n + '+';
+    });
+
+    if (elServices) animateCounter(elServices, targets.services, dur,
+      (v) => String(Math.round(v)));
+
+    if (elRating)   animateCounter(elRating, targets.rating, dur,
+      (v) => v.toFixed(1) + ' \u2605');
+
+  }, { threshold: 0.5 });
+
+  observer.observe(statsBar);
+})();
+
+/* ══════════════════════════════════════════
+   RADNO VREME — Otvoreno / Zatvoreno
+══════════════════════════════════════════ */
+(function () {
+  const schedule = {
+    1: { open: 8,  close: 20 }, // Ponedeljak
+    2: { open: 8,  close: 20 }, // Utorak
+    3: { open: 8,  close: 20 }, // Sreda
+    4: { open: 8,  close: 20 }, // Četvrtak
+    5: { open: 8,  close: 20 }, // Petak
+    6: { open: 8,  close: 14 }, // Subota
+    0: null,                     // Nedelja — zatvoreno
+  };
+
+  const statusEl  = document.getElementById('hoursStatus');
+  const statusTxt = document.getElementById('statusText');
+
+  if (!statusEl || !statusTxt) return;
+
+  const now     = new Date();
+  const day     = now.getDay();
+  const hour    = now.getHours();
+  const minutes = now.getMinutes();
+  const current = hour + minutes / 60;
+
+  const todaySchedule = schedule[day];
+  const isOpen = todaySchedule && current >= todaySchedule.open && current < todaySchedule.close;
+
+  statusEl.classList.add(isOpen ? 'open' : 'closed');
+  statusTxt.textContent = isOpen ? 'Otvoreno' : 'Zatvoreno';
+
+  // Highlight today's row
+  document.querySelectorAll('.hours-row').forEach(row => {
+    const days = row.dataset.days.split(',').map(Number);
+    if (days.includes(day)) row.classList.add('today');
+  });
+})();
+
+/* ══════════════════════════════════════════
+   COPY PHONE NUMBER
+══════════════════════════════════════════ */
+(function () {
+  const copyBtn = document.getElementById('copyPhone');
+  const phoneEl = document.getElementById('phoneNumber');
+  if (!copyBtn || !phoneEl) return;
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(phoneEl.textContent.trim()).then(() => {
+      const label = copyBtn.querySelector('.copy-label');
+      copyBtn.classList.add('copied');
+      if (label) label.textContent = 'Kopirano!';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        if (label) label.textContent = 'Kopiraj';
+      }, 2000);
+    });
+  });
+})();
+
+/* ══════════════════════════════════════════
+   DARK MODE TOGGLE
+══════════════════════════════════════════ */
+(function () {
+  const toggle = document.getElementById('darkToggle');
+  const html   = document.documentElement;
+
+  // Primijeni sačuvanu preferencu odmah
+  if (localStorage.getItem('darkMode') === 'on') {
+    html.classList.add('dark');
+  }
+
+  if (!toggle) return;
+
+  toggle.addEventListener('click', () => {
+    const isDark = html.classList.toggle('dark');
+    localStorage.setItem('darkMode', isDark ? 'on' : 'off');
+  });
+})();
