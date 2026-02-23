@@ -1,6 +1,32 @@
 /* ── script.js ── */
 
 /* ══════════════════════════════════════════
+   UTILITY: TOAST NOTIFICATIONS
+══════════════════════════════════════════ */
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('visible'));
+  setTimeout(() => {
+    t.classList.remove('visible');
+    setTimeout(() => t.remove(), 400);
+  }, 3500);
+}
+
+/* ══════════════════════════════════════════
+   UTILITY: SHAKE ANIMATION
+══════════════════════════════════════════ */
+function shake(el) {
+  if (!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth; // force reflow
+  el.classList.add('shake');
+  el.addEventListener('animationend', () => el.classList.remove('shake'), { once: true });
+}
+
+/* ══════════════════════════════════════════
    PULL-TO-REFRESH (overscroll gore → reload)
 ══════════════════════════════════════════ */
 (function () {
@@ -297,13 +323,23 @@
 ══════════════════════════════════════════ */
 const parallaxBg = document.getElementById('parallaxBg');
 
-function updateParallax() {
-  const scrollY = window.scrollY;
-  // Move background upward at 40% of scroll speed
-  parallaxBg.style.transform = `translateY(${scrollY * 0.40}px)`;
-}
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  function updateParallax() {
+    const scrollY = window.scrollY;
+    // Hero parallax
+    parallaxBg.style.transform = `translateY(${scrollY * 0.40}px)`;
 
-window.addEventListener('scroll', updateParallax, { passive: true });
+    // Per-element parallax relativno od centra viewporta
+    document.querySelectorAll('[data-parallax]').forEach(el => {
+      const speed = parseFloat(el.dataset.parallax);
+      const rect  = el.getBoundingClientRect();
+      const centerOffset = (rect.top + rect.height / 2) - window.innerHeight / 2;
+      el.style.transform = `translateY(${centerOffset * speed}px)`;
+    });
+  }
+
+  window.addEventListener('scroll', updateParallax, { passive: true });
+}
 
 /* ══════════════════════════════════════════
    NAVBAR: scroll state
@@ -319,6 +355,23 @@ function updateNavbar() {
 }
 
 window.addEventListener('scroll', updateNavbar, { passive: true });
+
+/* ── Active nav link on scroll ── */
+(function () {
+  const navAnchors = document.querySelectorAll('.nav-links a[href^="#"]');
+  const sectionIds = Array.from(navAnchors).map(a => a.getAttribute('href').slice(1));
+  const sections   = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+
+  function setActive(id) {
+    navAnchors.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => { if (entry.isIntersecting) setActive(entry.target.id); });
+  }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+})();
 
 /* ══════════════════════════════════════════
    MOBILE MENU toggle
@@ -499,8 +552,20 @@ refreshServicesDisplay();
    STAR RATING SYSTEM
 ══════════════════════════════════════════ */
 (function () {
-  const STORAGE_KEY = 'ordinacija_ratings';
+  const STORAGE_KEY  = 'ordinacija_ratings';
+  const REVIEWS_KEY  = 'ordinacija_reviews';
   const BASE_RATINGS = { count: 128, sum: 640 }; // 128 ocena × 5.0 prosek
+
+  function getReviews() {
+    try { return JSON.parse(localStorage.getItem(REVIEWS_KEY)) || []; }
+    catch (_) { return []; }
+  }
+
+  function saveReview(stars, comment, name) {
+    const reviews = getReviews();
+    reviews.push({ stars, comment: comment || '', name: name || '', date: Date.now() });
+    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+  }
 
   function getRatings() {
     try {
@@ -560,10 +625,12 @@ refreshServicesDisplay();
   updateDisplay(getRatings());
 
   const commentEl = document.getElementById('ratingComment');
+  const nameEl    = document.getElementById('ratingName');
 
   if (alreadyRated) {
     if (interactiveEl) interactiveEl.classList.add('disabled');
     if (commentEl)     commentEl.disabled = true;
+    if (nameEl)        nameEl.disabled    = true;
     if (submitBtn)     submitBtn.style.display = 'none';
     if (successEl)     successEl.classList.add('show');
     if (labelEl)       labelEl.textContent = 'Već ste glasali. Hvala!';
@@ -604,18 +671,33 @@ refreshServicesDisplay();
         labelEl.textContent = labels[selectedValue];
         labelEl.classList.add('has-value');
       }
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn) submitBtn.disabled = !(nameEl && nameEl.value.trim());
     });
+
+    // Revalidate submit when name changes
+    if (nameEl) {
+      nameEl.addEventListener('input', () => {
+        if (submitBtn) submitBtn.disabled = !(selectedValue > 0 && nameEl.value.trim());
+      });
+    }
   }
 
   // Submit
   if (submitBtn && !alreadyRated) {
     submitBtn.addEventListener('click', () => {
-      if (selectedValue === 0) return;
+      if (selectedValue === 0) {
+        shake(document.getElementById('ratingStars'));
+        showToast('Izaberite ocenu pre slanja.', 'error');
+        return;
+      }
       const data = saveRating(selectedValue);
       localStorage.setItem('ordinacija_user_rated', 'true');
       updateDisplay(data);
       if (selectedValue >= 2) incrementPatients();
+      const reviewComment = commentEl ? commentEl.value.trim() : '';
+      const reviewName    = nameEl    ? nameEl.value.trim()    : '';
+      saveReview(selectedValue, reviewComment, reviewName);
+      document.dispatchEvent(new CustomEvent('tc:newReview', { detail: { stars: selectedValue, comment: reviewComment, name: reviewName } }));
 
       // Send rating + comment via EmailJS
       const comment = (commentEl && commentEl.value.trim()) || 'Bez komentara';
@@ -628,8 +710,10 @@ refreshServicesDisplay();
 
       if (interactiveEl) interactiveEl.classList.add('disabled');
       if (commentEl)     commentEl.disabled = true;
+      if (nameEl)        nameEl.disabled    = true;
       submitBtn.style.display = 'none';
       if (successEl) successEl.classList.add('show');
+      showToast('Hvala na oceni! Vaše mišljenje nam mnogo znači.');
     });
   }
 })();
@@ -660,10 +744,25 @@ form.addEventListener('submit', e => {
   e.preventDefault();
 
   const btn = form.querySelector('.btn-primary');
+
+  // Validacija — shake invalid polja umjesto browser tooltipa
+  const invalids = [...form.querySelectorAll('[required]')].filter(el => !el.value.trim());
+  if (invalids.length) {
+    invalids.forEach(el => {
+      // Za select: shake vidljivi wrapper, ne skriveni <select>
+      if (el.tagName === 'SELECT') shake(form.querySelector('.select-wrap'));
+      else shake(el);
+    });
+    shake(btn);
+    showToast('Popunite obavezna polja.', 'error');
+    return;
+  }
+
   btn.textContent = 'Šaljemo…';
   btn.disabled    = true;
   btn.style.opacity = '.7';
 
+  const now = new Date();
   const templateParams = {
     name    : document.getElementById('name').value,
     phone   : document.getElementById('phone').value  || 'Nije unet',
@@ -671,6 +770,7 @@ form.addEventListener('submit', e => {
     service : document.getElementById('service').value || 'Nije odabrano',
     message : document.getElementById('message').value || 'Bez poruke',
     title   : 'Novi zahtev za pregled',
+    time    : now.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' }),
   };
 
   // Fire and forget — email šalje u pozadini
@@ -682,6 +782,7 @@ form.addEventListener('submit', e => {
     btn.textContent     = '✓ Zahtev poslat!';
     btn.style.background = '#16a34a';
     btn.style.opacity    = '1';
+    showToast('Zahtev je poslat! Javićemo se uskoro. ✓');
 
     setTimeout(() => {
       form.reset();
@@ -695,6 +796,26 @@ form.addEventListener('submit', e => {
     }, 3000);
   }, 1500);
 });
+
+// Telefon — dozvoli samo cifre i +
+const phoneInput = document.getElementById('phone');
+if (phoneInput) {
+  phoneInput.addEventListener('input', () => {
+    const pos = phoneInput.selectionStart;
+    const cleaned = phoneInput.value.replace(/[^\d+]/g, '');
+    if (phoneInput.value !== cleaned) {
+      phoneInput.value = cleaned;
+      phoneInput.setSelectionRange(pos - 1, pos - 1);
+    }
+  });
+  phoneInput.addEventListener('keydown', e => {
+    // Dozvoli: backspace, delete, tab, escape, arrows, home, end, +, cifre
+    const allowed = ['Backspace','Delete','Tab','Escape','ArrowLeft','ArrowRight','Home','End'];
+    if (allowed.includes(e.key)) return;
+    if (e.key === '+' && phoneInput.selectionStart === 0) return; // + samo na početku
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+  });
+}
 
 /* ══════════════════════════════════════════
    USLUGE — inline price toggle
@@ -789,8 +910,10 @@ document.querySelectorAll('.card-price-toggle').forEach(btn => {
     0: null,                     // Nedelja — zatvoreno
   };
 
-  const statusEl  = document.getElementById('hoursStatus');
-  const statusTxt = document.getElementById('statusText');
+  const statusEl    = document.getElementById('hoursStatus');
+  const statusTxt   = document.getElementById('statusText');
+  const navStatusEl = document.getElementById('navStatus');
+  const navStatusTxt = document.getElementById('navStatusTxt');
 
   if (!statusEl || !statusTxt) return;
 
@@ -805,6 +928,11 @@ document.querySelectorAll('.card-price-toggle').forEach(btn => {
 
   statusEl.classList.add(isOpen ? 'open' : 'closed');
   statusTxt.textContent = isOpen ? 'Otvoreno' : 'Zatvoreno';
+
+  if (navStatusEl && navStatusTxt) {
+    navStatusEl.classList.add(isOpen ? 'open' : 'closed');
+    navStatusTxt.textContent = isOpen ? 'Otvoreno' : 'Zatvoreno';
+  }
 
   // Highlight today's row
   document.querySelectorAll('.hours-row').forEach(row => {
@@ -841,9 +969,12 @@ document.querySelectorAll('.card-price-toggle').forEach(btn => {
   const toggle = document.getElementById('darkToggle');
   const html   = document.documentElement;
 
-  // Primijeni sačuvanu preferencu odmah
+  // Primijeni sačuvanu preferencu odmah (default je light)
   if (localStorage.getItem('darkMode') === 'on') {
     html.classList.add('dark');
+  } else {
+    html.classList.remove('dark');
+    if (!localStorage.getItem('darkMode')) localStorage.setItem('darkMode', 'off');
   }
 
   if (!toggle) return;
@@ -853,3 +984,239 @@ document.querySelectorAll('.card-price-toggle').forEach(btn => {
     localStorage.setItem('darkMode', isDark ? 'on' : 'off');
   });
 })();
+
+/* ══════════════════════════════════════════
+   TESTIMONIALS CAROUSEL
+══════════════════════════════════════════ */
+(function () {
+  const REVIEWS_KEY = 'ordinacija_reviews';
+
+  const SEEDS = [
+    { stars: 5, comment: 'Odlična ordinacija! Konačno stomatolog kod kojeg se ne osećam nervozno. Preporučujem svima.', name: 'Milica S.' },
+    { stars: 5, comment: 'Profesionalan pristup i prijatna atmosfera. Zub je izvađen bez ikakvog bola.', name: 'Nikola T.' },
+    { stars: 4, comment: 'Brzo zakazivanje i ljubazno osoblje. Definitivno se vraćam!', name: 'Ana K.' },
+    { stars: 5, comment: 'Izbeljivanje zuba — rezultat bolji od očekivanog. Hvala doktorici Anđeli!', name: 'Jelena M.' },
+    { stars: 4, comment: 'Moderna oprema i bez čekanja. Sve pohvale.', name: 'Stefan R.' },
+    { stars: 5, comment: 'Moje dete je prvi put otišlo kod stomatologa bez suza. Hvala na strpljenju!', name: 'Ivana P.' },
+  ];
+
+  function getStoredReviews() {
+    try { return JSON.parse(localStorage.getItem(REVIEWS_KEY)) || []; }
+    catch (_) { return []; }
+  }
+
+  function starsString(n) {
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  const track  = document.getElementById('tcTrack');
+  const dotsEl = document.getElementById('tcDots');
+  const prevBtn = document.getElementById('tcPrev');
+  const nextBtn = document.getElementById('tcNext');
+  if (!track || !dotsEl) return;
+
+  const stored = getStoredReviews().filter(r => r.stars >= 3);
+  // Realne recenzije prve, seed na kraju
+  const all = [...stored, ...SEEDS];
+
+  let current = 0;
+  let timer   = null;
+
+  function buildSlides() {
+    track.innerHTML = '';
+    dotsEl.innerHTML = '';
+    all.forEach((r, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'tc-slide';
+      slide.innerHTML =
+        '<div class="tc-quote">❝</div>' +
+        '<p class="tc-text">' + r.comment + '</p>' +
+        '<div class="tc-stars">' + starsString(r.stars) + '</div>' +
+        '<span class="tc-name">' + (r.name || 'Anonimni pacijent') + '</span>';
+      track.appendChild(slide);
+
+      const dot = document.createElement('button');
+      dot.className = 'tc-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', 'Recenzija ' + (i + 1));
+      dot.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+  }
+
+  function goTo(index) {
+    current = (index + all.length) % all.length;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    dotsEl.querySelectorAll('.tc-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function next() { goTo(current + 1); }
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(next, 5000);
+  }
+
+  buildSlides();
+  goTo(0);
+  startTimer();
+
+  // Prev / Next dugmad
+  if (prevBtn) prevBtn.addEventListener('click', () => { goTo(current - 1); startTimer(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { goTo(current + 1); startTimer(); });
+
+  const wrap = track.closest('.testimonials-carousel');
+  if (wrap) {
+    wrap.addEventListener('mouseenter', () => clearInterval(timer));
+    wrap.addEventListener('mouseleave', startTimer);
+  }
+
+  // Touch swipe
+  let touchStartX = 0;
+  track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  track.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { goTo(current + (diff > 0 ? 1 : -1)); startTimer(); }
+  });
+
+  // Trackpad horizontal swipe (wheel deltaX)
+  let wheelAccum = 0;
+  let wheelCooldown = false;
+  const viewport = track.closest('.tc-viewport') || track.parentElement;
+  viewport.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) return; // ignoriši vertikalni scroll
+    e.preventDefault();
+    if (wheelCooldown) return;
+    wheelAccum += e.deltaX;
+    if (Math.abs(wheelAccum) > 80) {
+      goTo(current + (wheelAccum > 0 ? 1 : -1));
+      startTimer();
+      wheelAccum = 0;
+      wheelCooldown = true;
+      setTimeout(() => { wheelCooldown = false; }, 600);
+    }
+  }, { passive: false });
+
+  // Mouse drag
+  let dragStartX = 0;
+  let dragging   = false;
+  track.addEventListener('mousedown', e => { dragStartX = e.clientX; dragging = true; track.classList.add('dragging'); clearInterval(timer); });
+  window.addEventListener('mousemove', e => { if (!dragging) return; track.style.transform = 'translateX(calc(-' + (current * 100) + '% + ' + (e.clientX - dragStartX) + 'px))'; });
+  window.addEventListener('mouseup', e => {
+    if (!dragging) return;
+    dragging = false;
+    track.classList.remove('dragging');
+    const diff = dragStartX - e.clientX;
+    if (Math.abs(diff) > 60) goTo(current + (diff > 0 ? 1 : -1));
+    else goTo(current);
+    startTimer();
+  });
+
+  // Kada korisnik ostavi novu recenziju >= 3 zvezdice, dodaj je u carousel
+  document.addEventListener('tc:newReview', function (e) {
+    const { stars, comment, name } = e.detail;
+    if (stars < 3) return;
+    all.unshift({ stars, comment, name: name || 'Anonimni pacijent' });
+    buildSlides();
+    goTo(0);
+    startTimer();
+  });
+})();
+
+/* ══════════════════════════════════════════
+   TYPED TEXT EFFECT
+══════════════════════════════════════════ */
+(function () {
+  const el = document.getElementById('typedText');
+  if (!el) return;
+
+  const phrases = ['Vaš osmeh,', 'Vaše poverenje,', 'Vaša nega,', 'Vaša lepota,'];
+
+  // Ako korisnik preferira smanjeno kretanje — prikaži prvu frazu statično
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = phrases[0];
+    return;
+  }
+
+  let pi = 0, ci = 0, deleting = false;
+
+  function tick() {
+    const phrase = phrases[pi];
+    if (!deleting) {
+      el.textContent = phrase.slice(0, ++ci);
+      if (ci === phrase.length) {
+        deleting = true;
+        return setTimeout(tick, 1800);
+      }
+    } else {
+      el.textContent = phrase.slice(0, --ci);
+      if (ci === 0) {
+        deleting = false;
+        pi = (pi + 1) % phrases.length;
+        return setTimeout(tick, 400);
+      }
+    }
+    setTimeout(tick, deleting ? 45 : 80);
+  }
+
+  setTimeout(tick, 900);
+})();
+
+/* ══════════════════════════════════════════
+   PAGE LOADER
+══════════════════════════════════════════ */
+(function () {
+  const loader = document.getElementById('pageLoader');
+  if (!loader) return;
+
+  function hideLoader() {
+    loader.classList.add('hidden');
+    setTimeout(() => { loader.style.display = 'none'; }, 600);
+  }
+
+  if (document.readyState === 'complete') {
+    hideLoader();
+  } else {
+    window.addEventListener('load', hideLoader);
+    // Fallback: hide after 4s no matter what
+    setTimeout(hideLoader, 4000);
+  }
+})();
+
+/* ══════════════════════════════════════════
+   COOKIE CONSENT
+══════════════════════════════════════════ */
+(function () {
+  const COOKIE_KEY = 'cookieConsent';
+  const banner     = document.getElementById('cookieBanner');
+  if (!banner) return;
+
+  // Already decided — don't show
+  if (localStorage.getItem(COOKIE_KEY)) return;
+
+  // Show after short delay so loader finishes first
+  setTimeout(() => banner.classList.add('visible'), 1200);
+
+  function dismiss(value) {
+    localStorage.setItem(COOKIE_KEY, value);
+    banner.classList.remove('visible');
+    setTimeout(() => banner.remove(), 500);
+  }
+
+  const acceptBtn  = document.getElementById('cookieAccept');
+  const declineBtn = document.getElementById('cookieDecline');
+
+  if (acceptBtn)  acceptBtn.addEventListener('click',  () => dismiss('accepted'));
+  if (declineBtn) declineBtn.addEventListener('click', () => dismiss('declined'));
+})();
+
+/* ══════════════════════════════════════════
+   PRINT CENOVNIK
+══════════════════════════════════════════ */
+(function () {
+  const btn = document.getElementById('printCenovnik');
+  if (!btn) return;
+  btn.addEventListener('click', () => window.print());
+})();
+

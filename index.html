@@ -4,11 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dr. Anđela Marelj – Stomatološka Ordinacija</title>
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://drmarelj.rs/" />
+  <meta property="og:title"       content="Dr. Anđela Marelj – Stomatološka Ordinacija" />
+  <meta property="og:description" content="Moderna stomatološka nega u toploj atmosferi. Zakazite pregled online — Niš, Orlovića Pavla 16." />
+  <meta property="og:image"       content="https://drmarelj.rs/public/doctor-andjela.png" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="description"        content="Stomatološka ordinacija Dr. Anđela Marelj u Nišu. Konzervativna stomatologija, protetika, hirurgija, izbeljivanje. Zakažite pregled." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text x='50%25' y='54%25' dominant-baseline='central' text-anchor='middle' font-size='26' fill='%232a9d8f'>✦</text></svg>" />
-  <script>if(localStorage.getItem('darkMode')==='on')document.documentElement.classList.add('dark');</script>
+  <script>if(localStorage.getItem('darkMode')==='on')document.documentElement.classList.add('dark');else localStorage.setItem('darkMode','off');</script>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Schema.org LocalBusiness — Rich results za Google -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dentist",
+    "name": "Stomatološka Ordinacija Dr. Anđela Marelj",
+    "image": "https://drmarelj.rs/public/doctor-andjela.png",
+    "url": "https://drmarelj.rs",
+    "telephone": "+38118258449",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Orlovića Pavla 16",
+      "addressLocality": "Niš",
+      "postalCode": "18000",
+      "addressCountry": "RS"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 43.3209,
+      "longitude": 21.8954
+    },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "08:00", "closes": "20:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "08:00", "closes": "14:00" }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5.0",
+      "reviewCount": "128"
+    }
+  }
+  </script>
+
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
@@ -21,6 +63,11 @@
   </script>
 </head>
 <body>
+
+  <!-- Page loader -->
+  <div id="pageLoader">
+    <div class="loader-logo">✦</div>
+  </div>
 
   <!-- ══════════════ NAVIGATION ══════════════ -->
   <nav id="navbar">
@@ -36,6 +83,7 @@
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#contact">Kontakt</a></li>
       </ul>
+      <span class="nav-status" id="navStatus"><span class="nav-status-dot"></span><span class="nav-status-txt" id="navStatusTxt"></span></span>
       <a href="#contact" class="nav-cta">Zakažite Pregled</a>
       <button class="dark-toggle" id="darkToggle" aria-label="Tamna tema">
         <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -62,7 +110,7 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <p class="hero-eyebrow">Dobrodošli u stomatološku ordinaciju</p>
-      <h1>Vaš osmeh,<br /><em>naša strast.</em></h1>
+      <h1><span id="typedText"></span><br /><em>naša strast.</em></h1>
       <p class="hero-sub">Moderna stomatološka nega u toploj i opuštenoj atmosferi — gde svaka poseta počinje poverenjem, a završava lepim osmehom.</p>
       <div class="hero-btns">
         <a href="#contact" class="btn-primary">Zakažite Pregled</a>
@@ -105,10 +153,14 @@
     <div class="container split">
       <div class="split-img" data-reveal="left">
         <div class="about-img-wrap">
-          <img
-          src="public/kamal-hoseinianzade-RCQnbyQsnUg-unsplash (1).jpg"
-            alt="Stomatološka ordinacija"
-          />
+          <div class="about-img-inner">
+            <img
+              src="public/about-smile.png"
+              alt="Stomatološka ordinacija"
+              data-parallax="0.07"
+              loading="lazy"
+            />
+          </div>
           <div class="about-badge">
             <span class="badge-num">15+</span>
             <span class="badge-txt">godina<br/>prakse</span>
@@ -236,6 +288,12 @@
           </div>
         </div>
       </div>
+      <div class="print-cenovnik-wrap" data-reveal="up">
+        <button id="printCenovnik" class="btn-ghost-light print-cenovnik-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Štampaj cenovnik
+        </button>
+      </div>
     </div>
   </section>
 
@@ -244,10 +302,14 @@
     <div class="container split doctor-split">
       <div class="split-img" data-reveal="left">
         <div class="about-img-wrap">
-          <img
-            src="/public/andjela12.jpg"
-            alt="Dr. Anđela Marelj"
-          />
+          <div class="about-img-inner">
+            <img
+              src="public/doctor-andjela.png"
+              alt="Dr. Anđela Marelj"
+              data-parallax="0.07"
+              loading="lazy"
+            />
+          </div>
           <div class="about-badge">
             <span class="badge-num">Dr.</span>
             <span class="badge-txt">Anđela<br/>Marelj</span>
@@ -377,6 +439,7 @@
             </div>
             <span class="rating-label" id="ratingLabel">Izaberite ocenu</span>
           </div>
+          <input id="ratingName" class="rating-comment rating-name" type="text" placeholder="Ime i prezime (obavezno)" required autocomplete="name" />
           <textarea id="ratingComment" class="rating-comment" placeholder="Ostavite komentar (opciono)…" rows="3"></textarea>
           <button class="btn-primary btn-rate" id="submitRating" disabled>Pošaljite ocenu →</button>
           <div class="rating-success" id="ratingSuccess">
@@ -384,6 +447,22 @@
             <span>Hvala na oceni!</span>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ TESTIMONIALS ══════════════ -->
+  <section id="testimonials" class="section section-alt">
+    <div class="container">
+      <p class="section-label" data-reveal="up">Recenzije</p>
+      <h2 data-reveal="up">Šta kažu naši pacijenti.</h2>
+      <div class="testimonials-carousel" data-reveal="up">
+        <button class="tc-arrow tc-prev" id="tcPrev" aria-label="Prethodna recenzija">&#8592;</button>
+        <div class="tc-viewport">
+          <div class="tc-track" id="tcTrack"></div>
+        </div>
+        <button class="tc-arrow tc-next" id="tcNext" aria-label="Sledeća recenzija">&#8594;</button>
+        <div class="tc-dots" id="tcDots"></div>
       </div>
     </div>
   </section>
@@ -477,13 +556,14 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="#6b7a8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
               </div>
-              <select id="service" name="service">
+              <select id="service" name="service" required>
                 <option value="">Izaberite uslugu…</option>
                 <option>Konzervativna stomatologija</option>
                 <option>Protetika</option>
                 <option>Oralna hirurgija</option>
                 <option>Ultrazvučno skidanje kamenca</option>
                 <option>Izbeljivanje zuba</option>
+                <option>Drugo</option>
               </select>
             </div>
           </div>
@@ -682,6 +762,17 @@
     </div>
   </div>
   <!-- end of CALCULATOR MODAL -->
+
+  <!-- Cookie consent banner -->
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-label="Obaveštenje o kolačićima">
+    <div class="cookie-inner">
+      <p class="cookie-text">Koristimo kolačiće kako bismo poboljšali vaše iskustvo na sajtu. Nastavkom korišćenja sajta prihvatate upotrebu kolačića.</p>
+      <div class="cookie-actions">
+        <button id="cookieAccept" class="btn-primary cookie-btn">Prihvatam</button>
+        <button id="cookieDecline" class="cookie-btn-secondary">Odbijam</button>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
